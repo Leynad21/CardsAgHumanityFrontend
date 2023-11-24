@@ -7,13 +7,14 @@ import ScrollableFeed from "react-scrollable-feed"
 import MyChatBubble from './MyChatBubble';
 import OthersChatBubble from './OthersChatBubble';
 
-const ChatBox = ({ chat, isChatLoading }) => {
+const ChatBox = ({ chat, isChatLoading, socket }) => {
 
     const user = JSON.parse(localStorage.getItem("user"));
     const { messages, isLoading: isMessagesLoading } = useMessages()
     const { sendMessage, isSending } = useSendMessage()
 
     const [newMessage, setNewMessage] = useState("")
+    const [messagesList, setMessagesList] = useState([])
 
     const handleSendMessage = () => {
 
@@ -28,6 +29,17 @@ const ChatBox = ({ chat, isChatLoading }) => {
         // Send message to api
         sendMessage(messageData)
 
+        // Emit message to socket
+        socket.emit("new message", {
+            content: newMessage,
+            chat: chat,
+            sender: {
+                username: user.user
+            }
+        })
+
+        console.log('Message sent:', newMessage);
+
         // Reset state
         setNewMessage("")
 
@@ -36,6 +48,20 @@ const ChatBox = ({ chat, isChatLoading }) => {
     const handleChange = (e) => {
         setNewMessage(e.target.value)
     }
+
+    useEffect(() => {
+        if (messages) {
+            setMessagesList(messages)
+        }
+    }, [messages])
+
+    useEffect(() => {
+        socket.on("message received", (newMessageReceived) => {
+            console.log('New Message Received:', newMessageReceived)
+
+            setMessagesList([...messagesList, newMessageReceived])
+        })
+    }, [messagesList])
 
 
 
@@ -52,7 +78,7 @@ const ChatBox = ({ chat, isChatLoading }) => {
                     </div>
                     <div className="px-2 h-[300px]">
                         <ScrollableFeed className='scrollbar-width-none'>
-                            {messages && messages.map((message) => (
+                            {messagesList && messagesList.map((message) => (
                                 <div key={message._id}>
                                     {user.user === message.sender.username
                                         ?
