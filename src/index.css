@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+    .scrollbar-width-none {
+      scrollbar-width: none; /* Firefox */
+    }
+
+    .scrollbar-width-none::-webkit-scrollbar {
+        display: none;
+      }
+  }
